@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video Downloader — TikTok & Instagram</title>
+<style>
+  :root{
+    --bg:#0f1115;
+    --panel:#171a21;
+    --panel2:#1e2230;
+    --border:#2a2f3d;
+    --text:#eef0f4;
+    --muted:#9aa2b1;
+    --accent:#4f7cff;
+    --accent2:#22c1a4;
+    --danger:#ff5d6c;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:radial-gradient(1200px 600px at 50% -10%, #1a2036 0%, var(--bg) 60%);
+    color:var(--text);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:32px 16px 60px;
+  }
+  .wrap{width:100%;max-width:640px;}
+  header{text-align:center;margin-bottom:28px;}
+  header h1{font-size:26px;margin:0 0 6px;font-weight:700;}
+  header p{color:var(--muted);margin:0;font-size:14px;line-height:1.6;}
+
+  .tabs{display:flex;gap:8px;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:6px;margin-bottom:18px;}
+  .tab{flex:1;text-align:center;padding:10px 12px;border-radius:10px;cursor:pointer;font-weight:600;font-size:14px;color:var(--muted);transition:.15s;}
+  .tab.active{background:var(--accent);color:white;}
+
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:22px;}
+  .row{display:flex;gap:10px;}
+  input[type=text]{
+    flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);
+    padding:13px 14px;border-radius:10px;font-size:15px;outline:none;
+  }
+  input[type=text]:focus{border-color:var(--accent);}
+  button.go{
+    background:var(--accent);color:white;border:none;border-radius:10px;
+    padding:0 20px;font-weight:700;font-size:14px;cursor:pointer;white-space:nowrap;
+  }
+  button.go:disabled{opacity:.55;cursor:not-allowed;}
+  button.go:hover:not(:disabled){filter:brightness(1.08);}
+
+  .status{margin-top:14px;font-size:13px;color:var(--muted);min-height:18px;}
+  .status.err{color:var(--danger);}
+
+  .result{margin-top:18px;display:none;}
+  .result.show{display:block;}
+  .preview{display:flex;gap:14px;background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;}
+  .preview img{width:88px;height:88px;object-fit:cover;border-radius:10px;flex-shrink:0;background:#000;}
+  .preview .meta{overflow:hidden;}
+  .preview .meta .t{font-size:14px;font-weight:600;margin:0 0 4px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;}
+  .preview .meta .a{font-size:13px;color:var(--muted);margin:0;}
+
+  .dl-links{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .dl-links a{
+    display:block;text-align:center;padding:12px 10px;border-radius:10px;
+    text-decoration:none;font-weight:700;font-size:13.5px;border:1px solid var(--border);
+  }
+  .dl-links a.no-wm{background:var(--accent2);color:#062a24;}
+  .dl-links a.wm{background:var(--panel2);color:var(--text);}
+  .dl-links a.audio{background:transparent;color:var(--muted);grid-column:span 2;border-style:dashed;}
+
+  .note{background:#20263a;border:1px solid var(--border);border-radius:12px;padding:14px 16px;font-size:13px;color:var(--muted);line-height:1.7;margin-top:16px;}
+  .note b{color:var(--text);}
+  .note code{background:#0d1017;padding:1px 6px;border-radius:5px;color:#9fd3ff;}
+
+  .ig-note{text-align:center;padding:26px 10px;color:var(--muted);font-size:14px;line-height:1.8;}
+  footer{text-align:center;color:var(--muted);font-size:12px;margin-top:22px;line-height:1.7;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Video Downloader</h1>
+    <p>TikTok ka link paste karein — with / without watermark download karein.</p>
+  </header>
+
+  <div class="card" id="tiktok-panel">
+    <div class="row">
+      <input type="text" id="tt-url" placeholder="https://www.tiktok.com/@user/video/... ya vt.tiktok.com link">
+      <button class="go" id="tt-go">Fetch</button>
+    </div>
+    <div class="status" id="tt-status"></div>
+
+    <div class="result" id="tt-result">
+      <div class="preview">
+        <img id="tt-cover" src="" alt="">
+        <div class="meta">
+          <p class="t" id="tt-title">—</p>
+          <p class="a" id="tt-author">—</p>
+        </div>
+      </div>
+      <div class="dl-links">
+        <a class="no-wm" id="tt-nowm" href="#" target="_blank" rel="noopener">⬇ Without Watermark (HD)</a>
+        <a class="wm" id="tt-wm" href="#" target="_blank" rel="noopener">⬇ With Watermark</a>
+        <a class="audio" id="tt-audio" href="#" target="_blank" rel="noopener">🎵 Sirf Audio (MP3) Download</a>
+      </div>
+    </div>
+
+    <div class="note">
+      <b>Zaroori baat:</b> Ye tool ek free, unofficial community API (<code>tikwm.com</code>) use karta hai jo TikTok ka koi official partner nahi. Kabhi kabhi ye slow ho sakta hai ya kisi private/region-locked video par kaam na kare — lekin zyada tar public videos ke liye theek chalta hai.
+    </div>
+  </div>
+
+  <footer>
+    Ye file aapke apne computer par offline chalti hai — download kar ke browser mein open karein.<br>
+    Sirf apni banayi hui ya public/shareable content download karein; copyrighted content owner ki ijazat ke bagair share na karein.
+  </footer>
+</div>
+
+<script>
+const tabs = document.querySelectorAll('.tab');
+tabs.forEach(t=>t.addEventListener('click',()=>{
+  tabs.forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  document.getElementById('tiktok-panel').style.display = t.dataset.tab==='tiktok' ? 'block':'none';
+  document.getElementById('instagram-panel').style.display = t.dataset.tab==='instagram' ? 'block':'none';
+}));
+
+const ttUrl = document.getElementById('tt-url');
+const ttGo = document.getElementById('tt-go');
+const ttStatus = document.getElementById('tt-status');
+const ttResult = document.getElementById('tt-result');
+
+async function fetchTikTok(url){
+  const api = 'https://www.tikwm.com/api/?url=' + encodeURIComponent(url) + '&hd=1';
+  // try direct fetch first, fall back to a CORS proxy if the browser blocks it
+  const attempts = [
+    api,
+    'https://api.allorigins.win/raw?url=' + encodeURIComponent(api)
+  ];
+  let lastErr;
+  for(const endpoint of attempts){
+    try{
+      const res = await fetch(endpoint);
+      const json = await res.json();
+      if(json && json.code === 0 && json.data){
+        return json.data;
+      }
+      lastErr = new Error(json && json.msg ? json.msg : 'Video nahi mila. Link check karein.');
+    }catch(e){
+      lastErr = e;
+    }
+  }
+  throw lastErr || new Error('Kuch ghalat ho gaya.');
+}
+
+ttGo.addEventListener('click', async ()=>{
+  const url = ttUrl.value.trim();
+  if(!url){ setStatus(false,'Pehle TikTok link paste karein.'); return; }
+  ttGo.disabled = true;
+  ttResult.classList.remove('show');
+  setStatus(true,'Video ki maloomat le rahe hain...');
+  try{
+    const data = await fetchTikTok(url);
+    document.getElementById('tt-cover').src = data.cover || data.origin_cover || '';
+    document.getElementById('tt-title').textContent = (data.title || 'Untitled video').slice(0,80);
+    document.getElementById('tt-author').textContent = data.author && data.author.nickname ? '@'+data.author.unique_id : '';
+    document.getElementById('tt-nowm').href = data.hdplay || data.play;
+    document.getElementById('tt-wm').href = data.wmplay || data.play;
+    const audioLink = document.getElementById('tt-audio');
+    if(data.music){ audioLink.href = data.music; audioLink.style.display='block'; }
+    else { audioLink.style.display='none'; }
+    ttResult.classList.add('show');
+    setStatus(true,'Mil gaya! Neeche se download karein.');
+  }catch(e){
+    setStatus(false,'Fetch nahi ho saka — link sahi hai ya nahi check karein, ya thodi dair baad dobara koshish karein.');
+  }finally{
+    ttGo.disabled = false;
+  }
+});
+
+function setStatus(ok,msg){
+  ttStatus.textContent = msg;
+  ttStatus.classList.toggle('err', !ok && msg.toLowerCase().includes('nahi'));
+}
+
+ttUrl.addEventListener('keydown', e=>{ if(e.key==='Enter') ttGo.click(); });
+</script>
+</body>
+</html>
